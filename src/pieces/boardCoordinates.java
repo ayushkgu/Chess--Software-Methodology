@@ -1,3 +1,5 @@
+package pieces;
+
 public class boardCoordinates {
     public int rank, file;
 
@@ -7,22 +9,23 @@ public class boardCoordinates {
     }
 
 
-    public boolean isVerticalTo(boardCoordinates other) {
+    public boolean isOnTheSameFile(boardCoordinates other) {
         return this.file == other.file;
     }
 
-    public boolean isDiagonalTo(boardCoordinates other) {
+    public boolean isDiagonal(boardCoordinates other) {
         if (this.file == other.file || this.rank == other.rank) {
             return false;
+        } else {
+        return Math.abs(this.rank - other.rank) == Math.abs(this.file - other.file);
         }
-        return Math.abs(this.file - other.file) == Math.abs(this.rank - other.rank);
     }
 
-    public boolean isHorizontalTo(boardCoordinates other) {
+    public boolean isOnTheSameRank(boardCoordinates other) {
         return this.rank == other.rank;
     }
     
-    public static boolean isValidPromotion(String promote) {
+    public static boolean isPromotionValid(String promote) {
         return "NQBRP".contains(promote);
     }
     
