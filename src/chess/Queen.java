@@ -12,7 +12,6 @@ public class Queen extends ChessPiece {
         int sourceRank = Character.getNumericValue(move.charAt(1));
         char destFile = move.charAt(3);
         int destRank = Character.getNumericValue(move.charAt(4));
-
         // Check if the move is horizontal, vertical, or diagonal
         return sourceFile == destFile || sourceRank == destRank || Math.abs(destFile - sourceFile) == Math.abs(destRank - sourceRank);
     }
