@@ -1,19 +1,19 @@
-package pieces;
+package chess;
 
-public class boardCoordinates {
+public class BoardCoordinates {
     public int rank, file;
 
-    public boardCoordinates(int rank, int file) {
+    public BoardCoordinates(int rank, int file) {
         this.rank = rank;
         this.file = file;
     }
 
 
-    public boolean isOnTheSameFile(boardCoordinates other) {
+    public boolean isOnTheSameFile(BoardCoordinates other) {
         return this.file == other.file;
     }
 
-    public boolean isDiagonal(boardCoordinates other) {
+    public boolean isDiagonal(BoardCoordinates other) {
         if (this.file == other.file || this.rank == other.rank) {
             return false;
         } else {
@@ -21,7 +21,7 @@ public class boardCoordinates {
         }
     }
 
-    public boolean isOnTheSameRank(boardCoordinates other) {
+    public boolean isOnTheSameRank(BoardCoordinates other) {
         return this.rank == other.rank;
     }
     
