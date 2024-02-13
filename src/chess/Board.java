@@ -1,7 +1,5 @@
 package chess;
- import java.awt.Color;
- import chess.*;
- import pieces.*;
+import java.awt.Color;
  
  public class Board {
      // Inner class to represent a square on the board
