@@ -86,6 +86,21 @@ public class Chess {
             returnPlay.message = ReturnPlay.Message.DRAW;
             return returnPlay;
         }
+
+
+        // Get the piece at the destination square
+        ReturnPiece destPiece = getPieceAtSquare(destFile, destRank, returnPlay.piecesOnBoard);
+
+        // Check if there is a piece at the destination square
+        if (destPiece != null) {
+            // Check if the destination square is occupied by a piece of the same color
+            if ((sourcePiece.pieceType.name().startsWith("W") && destPiece.pieceType.name().startsWith("W")) ||
+                (sourcePiece.pieceType.name().startsWith("B") && destPiece.pieceType.name().startsWith("B"))) {
+                returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+                return returnPlay;
+            }
+        }
+
     
         /*
         // Check for en passant move
