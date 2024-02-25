@@ -18,11 +18,13 @@ public class Pawn extends ChessPiece {
 
         // Check if the destination square is one square forward
         if (pieceFile.name().charAt(0) == destFile && pieceRank + 1 == destRank) {
+            hasMoved = true; // Set hasMoved to true after moving one square forward
             return true;
         }
 
         // Check if the destination square is two squares forward (only valid if pawn hasn't moved yet)
         if (!hasMoved && pieceFile.name().charAt(0) == destFile && pieceRank + 2 == destRank) {
+            hasMoved = true; // Set hasMoved to true after moving two squares forward
             return true;
         }
 

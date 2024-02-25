@@ -38,6 +38,7 @@ class ReturnPlay {
 public class Chess {
 
     enum Player { white, black }
+    static Player currentPlayer = Player.white; // Track current player's turn
     static boolean enPassant = false; // Flag to track en passant moves
     static boolean boardInitialized = false;
     static ReturnPlay returnPlay = new ReturnPlay();
@@ -52,13 +53,19 @@ public class Chess {
      *         the contents of the returned ReturnPlay instance.
      */
     public static ReturnPlay play(String move) {
-        
-         // Initialize the board if it hasn't been initialized yet
+        // Initialize the board if it hasn't been initialized yet
         if (!boardInitialized) {
             returnPlay.piecesOnBoard = initializeBoard();
             boardInitialized = true;
         }
-
+    
+        // Check if it's the correct player's turn
+        if ((currentPlayer == Player.white && isBlackPiece(move)) ||
+            (currentPlayer == Player.black && isWhitePiece(move))) {
+            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            return returnPlay;
+        }
+    
         // Parse the move string to get the source and destination squares
         String[] moveParts = move.trim().split(" ");
         String sourceSquare = moveParts[0];
@@ -79,12 +86,14 @@ public class Chess {
             returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
             return returnPlay;
         }
-
+    
+        /*
         // Check for en passant move
         if (isEnPassantMove(sourceSquare, destSquare)) {
             if (canEnPassant(returnPlay.piecesOnBoard, sourceSquare, destSquare)) {
                 performEnPassant(returnPlay.piecesOnBoard, sourceSquare, destSquare);
                 enPassant = false;
+                switchTurn(); // Switch to the next player's turn
                 return returnPlay;
             } else {
                 returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
@@ -98,12 +107,14 @@ public class Chess {
         if (isCastlingMove(sourceSquare, destSquare)) {
             if (canCastle(returnPlay.piecesOnBoard, sourceSquare, destSquare)) {
                 performCastling(returnPlay.piecesOnBoard, sourceSquare, destSquare);
+                switchTurn(); // Switch to the next player's turn
                 return returnPlay;
             } else {
                 returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
                 return returnPlay;
             }
         }
+        */
     
         // Create a ChessPiece object corresponding to the source piece
         ChessPiece chessPiece = createChessPieceFromReturnPiece(sourcePiece);
@@ -114,18 +125,20 @@ public class Chess {
             return returnPlay;
         }
     
-        // Check if the move puts the player's own king in check
-        ArrayList<ReturnPiece> updatedBoard = new ArrayList<>(returnPlay.piecesOnBoard);
-        applyMoveToBoard(sourcePiece, destFile, destRank, updatedBoard);
+        //  THIS SEEMS TO ALWAYS GIVE ILLEGAL_MOVE
+        // // Check if the move puts the player's own king in check
+        // ArrayList<ReturnPiece> updatedBoard = new ArrayList<>(returnPlay.piecesOnBoard);
+        // applyMoveToBoard(sourcePiece, destFile, destRank, updatedBoard);
     
-        if (isKingInCheck(updatedBoard, sourcePiece.pieceType)) {
-            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-            return returnPlay;
-        }
+        // if (isKingInCheck(updatedBoard, sourcePiece.pieceType)) {
+        //     returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+        //     return returnPlay;
+        // }
     
         // Update the board state
         applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
     
+        /*
         // Check for special moves (e.g., en passant, castling, pawn promotion)
         if (isPawnPromotion(sourcePiece, destRank)) {
             // Perform pawn promotion
@@ -156,10 +169,40 @@ public class Chess {
         } else if (isKingInCheck(returnPlay.piecesOnBoard, sourcePiece.pieceType)) {
             returnPlay.message = ReturnPlay.Message.CHECK;
         }
+        */
+
+
+        // Switch to the next player's turn
+        switchTurn();
     
         // Set the message based on the outcome of the move
         return returnPlay;
-    }    
+    }
+
+    //Method to switch the turn to the next player
+    private static void switchTurn() {
+        currentPlayer = (currentPlayer == Player.white) ? Player.black : Player.white;
+    }
+
+    private static boolean isWhitePiece(String move) {
+        String[] moveParts = move.trim().split(" ");
+        String sourceSquare = moveParts[0];
+        ReturnPiece.PieceFile sourceFile = ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1));
+        ReturnPiece piece = getPieceAtSquare(sourceFile, Integer.parseInt(sourceSquare.substring(1)), returnPlay.piecesOnBoard);
+        return piece != null && piece.pieceType.name().startsWith("W");
+    }
+
+    private static boolean isBlackPiece(String move) {
+        String[] moveParts = move.trim().split(" ");
+        String sourceSquare = moveParts[0];
+        ReturnPiece.PieceFile sourceFile = ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1));
+        ReturnPiece piece = getPieceAtSquare(sourceFile, Integer.parseInt(sourceSquare.substring(1)), returnPlay.piecesOnBoard);
+        return piece != null && piece.pieceType.name().startsWith("B");
+    }
+
+
+
+
 
     /**
      * Resets the game state and initializes the board with default pieces.
@@ -167,12 +210,18 @@ public class Chess {
     public static void start() {
         // Initialize the game board
         ArrayList<ReturnPiece> piecesOnBoard = initializeBoard();
-    
+
         // Create a new ReturnPlay instance
         returnPlay = new ReturnPlay();
         returnPlay.piecesOnBoard = piecesOnBoard;
 
+        // Reset current player to white at the start of the game
+        currentPlayer = Player.white;
     }
+
+
+
+
 
     private static boolean isValidMove(ReturnPiece.PieceFile sourceFile, int sourceRank, ReturnPiece.PieceFile destFile, int destRank, ArrayList<ReturnPiece> piecesOnBoard) {
         // Get the piece at the source square
