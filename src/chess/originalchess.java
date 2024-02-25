@@ -1,4 +1,3 @@
-//Ayush Gupta & Yash Shah
 package chess;
 
 import java.util.ArrayList;
@@ -39,6 +38,7 @@ public class Chess {
 
     enum Player { white, black }
     static boolean enPassant = false; // Flag to track en passant moves
+
 
     /**
      * Plays the next move for whichever player has the turn.
