@@ -39,6 +39,8 @@ public class Chess {
 
     enum Player { white, black }
     static boolean enPassant = false; // Flag to track en passant moves
+    static boolean boardInitialized = false;
+    static ReturnPlay returnPlay = new ReturnPlay();
 
     /**
      * Plays the next move for whichever player has the turn.
@@ -50,8 +52,13 @@ public class Chess {
      *         the contents of the returned ReturnPlay instance.
      */
     public static ReturnPlay play(String move) {
-        ReturnPlay returnPlay = new ReturnPlay();
-        returnPlay.piecesOnBoard = initializeBoard();
+        
+         // Initialize the board if it hasn't been initialized yet
+        if (!boardInitialized) {
+            returnPlay.piecesOnBoard = initializeBoard();
+            boardInitialized = true;
+        }
+
         // Parse the move string to get the source and destination squares
         String[] moveParts = move.trim().split(" ");
         String sourceSquare = moveParts[0];
@@ -162,7 +169,7 @@ public class Chess {
         ArrayList<ReturnPiece> piecesOnBoard = initializeBoard();
     
         // Create a new ReturnPlay instance
-        ReturnPlay returnPlay = new ReturnPlay();
+        returnPlay = new ReturnPlay();
         returnPlay.piecesOnBoard = piecesOnBoard;
 
     }
