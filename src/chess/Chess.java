@@ -83,7 +83,7 @@ public class Chess {
     
         // Check if there is a piece at the source square
         if (sourcePiece == null) {
-            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            returnPlay.message = ReturnPlay.Message.DRAW;
             return returnPlay;
         }
     
@@ -119,7 +119,7 @@ public class Chess {
         // Create a ChessPiece object corresponding to the source piece
         ChessPiece chessPiece = createChessPieceFromReturnPiece(sourcePiece);
     
-        // Check if the move is valid for the piece according to its movement rules
+        // Check if the move is valid for the piece according to its movement rules 
         if (!chessPiece.isValidMove(sourceFile.name() + sourceRank + " " + destFile.name() + destRank)) {
             returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
             return returnPlay;

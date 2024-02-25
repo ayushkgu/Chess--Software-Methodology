@@ -15,28 +15,52 @@ public class Pawn extends ChessPiece {
         int sourceRank = Character.getNumericValue(move.charAt(1));
         char destFile = move.charAt(3);
         int destRank = Character.getNumericValue(move.charAt(4));
-
-        // Check if the destination square is one square forward
-        if (pieceFile.name().charAt(0) == destFile && pieceRank + 1 == destRank) {
+    
+        // Check if the destination square is one square forward for white pawns
+        if (pieceType == ReturnPiece.PieceType.WP && 
+            pieceFile.name().charAt(0) == destFile && pieceRank + 1 == destRank) {
             hasMoved = true; // Set hasMoved to true after moving one square forward
             return true;
         }
-
-        // Check if the destination square is two squares forward (only valid if pawn hasn't moved yet)
-        if (!hasMoved && pieceFile.name().charAt(0) == destFile && pieceRank + 2 == destRank) {
+    
+        // Check if the destination square is two squares forward for white pawns (only valid if pawn hasn't moved yet)
+        if (pieceType == ReturnPiece.PieceType.WP && !hasMoved && 
+            pieceFile.name().charAt(0) == destFile && pieceRank + 2 == destRank) {
             hasMoved = true; // Set hasMoved to true after moving two squares forward
             return true;
         }
-
-        // Check if the destination square is one square diagonally forward for capturing
-        if (Math.abs(pieceFile.ordinal() - ReturnPiece.PieceFile.valueOf(String.valueOf(destFile)).ordinal()) == 1 &&
-                pieceRank + 1 == destRank) {
+    
+        // Check if the destination square is one square diagonally forward for capturing for white pawns
+        if (pieceType == ReturnPiece.PieceType.WP &&
+            Math.abs(pieceFile.ordinal() - ReturnPiece.PieceFile.valueOf(String.valueOf(destFile)).ordinal()) == 1 &&
+            pieceRank + 1 == destRank) {
             return true;
         }
-
+    
+        // Check if the destination square is one square forward for black pawns
+        if (pieceType == ReturnPiece.PieceType.BP && 
+            pieceFile.name().charAt(0) == destFile && pieceRank - 1 == destRank) {
+            hasMoved = true; // Set hasMoved to true after moving one square forward
+            return true;
+        }
+    
+        // Check if the destination square is two squares forward for black pawns (only valid if pawn hasn't moved yet)
+        if (pieceType == ReturnPiece.PieceType.BP && !hasMoved && 
+            pieceFile.name().charAt(0) == destFile && pieceRank - 2 == destRank) {
+            hasMoved = true; // Set hasMoved to true after moving two squares forward
+            return true;
+        }
+    
+        // Check if the destination square is one square diagonally forward for capturing for black pawns
+        if (pieceType == ReturnPiece.PieceType.BP &&
+            Math.abs(pieceFile.ordinal() - ReturnPiece.PieceFile.valueOf(String.valueOf(destFile)).ordinal()) == 1 &&
+            pieceRank - 1 == destRank) {
+            return true;
+        }
+    
         return false;
     }
-
+    
     // Getter and setter for hasMoved field
     public boolean hasMoved() {
         return hasMoved;
