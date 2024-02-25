@@ -39,7 +39,6 @@ public class Chess {
 
     enum Player { white, black }
     static boolean enPassant = false; // Flag to track en passant moves
-    private static Player currentPlayer;
 
 
     /**
@@ -166,9 +165,7 @@ public class Chess {
         // Create a new ReturnPlay instance
         ReturnPlay returnPlay = new ReturnPlay();
         returnPlay.piecesOnBoard = piecesOnBoard;
-    
-        // Set the current player
-        currentPlayer = Player.white; 
+
     }
 
     private static boolean isValidMove(ReturnPiece.PieceFile sourceFile, int sourceRank, ReturnPiece.PieceFile destFile, int destRank, ArrayList<ReturnPiece> piecesOnBoard) {
@@ -705,8 +702,4 @@ public class Chess {
         return returnPlay;
     }
 
-    public static Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-    
 }
