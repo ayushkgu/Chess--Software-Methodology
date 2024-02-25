@@ -60,6 +60,21 @@ public class Chess {
         String destSquare = moveParts[1];
         boolean isDrawRequested = moveParts.length > 2 && moveParts[2].equals("draw?");
     
+        // Convert source and destination squares to file and rank
+        ReturnPiece.PieceFile sourceFile = ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1));
+        int sourceRank = Integer.parseInt(sourceSquare.substring(1));
+        ReturnPiece.PieceFile destFile = ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1));
+        int destRank = Integer.parseInt(destSquare.substring(1));
+    
+        // Get the piece at the source square
+        ReturnPiece sourcePiece = getPieceAtSquare(sourceFile, sourceRank, returnPlay.piecesOnBoard);
+    
+        // Check if there is a piece at the source square
+        if (sourcePiece == null) {
+            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            return returnPlay;
+        }
+
         // Check for en passant move
         if (isEnPassantMove(sourceSquare, destSquare)) {
             if (canEnPassant(returnPlay.piecesOnBoard, sourceSquare, destSquare)) {
@@ -83,21 +98,6 @@ public class Chess {
                 returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
                 return returnPlay;
             }
-        }
-    
-        // Convert source and destination squares to file and rank
-        ReturnPiece.PieceFile sourceFile = ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1));
-        int sourceRank = Integer.parseInt(sourceSquare.substring(1));
-        ReturnPiece.PieceFile destFile = ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1));
-        int destRank = Integer.parseInt(destSquare.substring(1));
-    
-        // Get the piece at the source square
-        ReturnPiece sourcePiece = getPieceAtSquare(sourceFile, sourceRank, returnPlay.piecesOnBoard);
-    
-        // Check if there is a piece at the source square
-        if (sourcePiece == null) {
-            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-            return returnPlay;
         }
     
         // Create a ChessPiece object corresponding to the source piece
@@ -680,7 +680,7 @@ public class Chess {
         return returnPlay;
     }
 
-    //Method to handle a  draw
+    //Method to handle a draw
     private static boolean isDraw(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece.PieceType kingPieceType) {
         // Check for draw conditions such as stalemate, threefold repetition, etc.
         if (isStalemate(piecesOnBoard, kingPieceType)) {
