@@ -1,7 +1,9 @@
 //Ayush Gupta & Yash Shah
 package chess;
 
-import java.util.ArrayList;
+import java.util.*;
+
+import chess.ReturnPiece.PieceType;
 
 class ReturnPiece {
 	static enum PieceType {WP, WR, WN, WB, WQ, WK, 
@@ -37,6 +39,8 @@ class ReturnPlay {
 }
 
 public class Chess {
+    static ArrayList<String> movesHistory = new ArrayList<>();
+    static Stack<ArrayList<ReturnPiece>> boardHistory = new Stack<>(); // Stack to store board states
 
     enum Player { white, black }
     static Player currentPlayer = Player.white; // Track current player's turn
@@ -53,6 +57,7 @@ public class Chess {
      *         See the section "The Chess class" in the assignment description for details of
      *         the contents of the returned ReturnPlay instance.
      */
+
     public static ReturnPlay play(String move) {
         // Initialize the board if it hasn't been initialized yet
         if (!boardInitialized) {
@@ -60,13 +65,16 @@ public class Chess {
             boardInitialized = true;
         }
 
+        returnPlay.message = null;    
+        boardHistory.push(new ArrayList<>(returnPlay.piecesOnBoard));
+
         // Check if the move is a resignation
         if (move.trim().equalsIgnoreCase("resign")) {
             ReturnPlay.Message resignMessage = (currentPlayer == Player.white) ? ReturnPlay.Message.RESIGN_BLACK_WINS : ReturnPlay.Message.RESIGN_WHITE_WINS;
             returnPlay.message = resignMessage;
             return returnPlay;
         }
-
+    
         // Check if it's the correct player's turn
         if ((currentPlayer == Player.white && isBlackPiece(move)) ||
             (currentPlayer == Player.black && isWhitePiece(move))) {
@@ -74,7 +82,6 @@ public class Chess {
             return returnPlay;
         }
     
-
         // Parse the move string to get the source and destination squares
         String[] moveParts = move.trim().split(" ");
         String sourceSquare = moveParts[0];
@@ -92,13 +99,13 @@ public class Chess {
     
         // Check if there is a piece at the source square
         if (sourcePiece == null) {
-            returnPlay.message = ReturnPlay.Message.DRAW;
+            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
             return returnPlay;
         }
-
+    
         // Get the piece at the destination square
         ReturnPiece destPiece = getPieceAtSquare(destFile, destRank, returnPlay.piecesOnBoard);
-
+    
         // Check if there is a piece at the destination square
         if (destPiece != null) {
             if ((sourcePiece.pieceType.name().startsWith("W") && destPiece.pieceType.name().startsWith("W")) ||
@@ -112,23 +119,53 @@ public class Chess {
         ChessPiece chessPiece = createChessPieceFromReturnPiece(sourcePiece);
     
         // Check if the move is valid for the piece according to its movement rules 
-if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
-    returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-    return returnPlay;
-}
+        if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
+            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            return returnPlay;
+        }
     
         // Update the board state
-        applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
+        if (chessPiece instanceof King && Math.abs(sourceFile.ordinal() - destFile.ordinal()) == 2 && chessPiece.isValidMove(move)) {
+            // Perform castling move
+            ReturnPiece rook;
+            ReturnPiece king = sourcePiece;
+            if (destFile.ordinal() > sourceFile.ordinal()) {
+                // Castling to the right
+                rook = getPieceAtSquare(ReturnPiece.PieceFile.h, destRank, returnPlay.piecesOnBoard);
+                if (rook == null || rook.hasMoved) {
+                    returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+                    return returnPlay;
+                }
+                applyMoveToBoard(king, ReturnPiece.PieceFile.g, destRank, returnPlay.piecesOnBoard); // Move king
+                applyMoveToBoard(rook, ReturnPiece.PieceFile.f, destRank, returnPlay.piecesOnBoard); // Move rook
+            } else {
+                // Castling to the left
+                rook = getPieceAtSquare(ReturnPiece.PieceFile.a, destRank, returnPlay.piecesOnBoard);
+                if (rook == null || rook.hasMoved) {
+                    returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+                    return returnPlay;
+                }
+                applyMoveToBoard(king, ReturnPiece.PieceFile.c, destRank, returnPlay.piecesOnBoard); // Move king
+                applyMoveToBoard(rook, ReturnPiece.PieceFile.d, destRank, returnPlay.piecesOnBoard); // Move rook
+            }
+        } else {
+            applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
+        }
+        movesHistory.add(move);
 
         // Check for check
         if (isInCheck(currentPlayer, returnPlay.piecesOnBoard)) {
-            returnPlay.message = ReturnPlay.Message.CHECK;
-            // Check for checkmate
-            if (isCheckmate(currentPlayer, returnPlay.piecesOnBoard)) {
-                returnPlay.message = (currentPlayer == Player.white) ? ReturnPlay.Message.CHECKMATE_BLACK_WINS : ReturnPlay.Message.CHECKMATE_WHITE_WINS;
-            }
+            // If the move puts the current player in check, revert the move
+            undoLastMove();
+            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            return returnPlay;
         }
 
+        // Check for checkmate
+        if (isCheckmate(currentPlayer, returnPlay.piecesOnBoard)) {
+            returnPlay.message = (currentPlayer == Player.white) ? ReturnPlay.Message.CHECKMATE_BLACK_WINS : ReturnPlay.Message.CHECKMATE_WHITE_WINS;
+        }
+    
         // Check for draw request after the move is executed
         if (isDrawRequested) {
             returnPlay.message = ReturnPlay.Message.DRAW;
@@ -138,8 +175,7 @@ if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
     
         // Set the message based on the outcome of the move
         return returnPlay;
-    }
-
+    }    
     
 
       /**
@@ -149,6 +185,7 @@ if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
         // Initialize the game board
         ArrayList<ReturnPiece> piecesOnBoard = initializeBoard();
         PlayChess.printBoard(piecesOnBoard);
+        movesHistory.clear();
         // Create a new ReturnPlay instance
         returnPlay = new ReturnPlay();
         returnPlay.piecesOnBoard = piecesOnBoard;
@@ -252,6 +289,7 @@ if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
 
     private static void applyMoveToBoard(ReturnPiece sourcePiece, ReturnPiece.PieceFile destFile, int destRank, ArrayList<ReturnPiece> piecesOnBoard) {
         // Update the piece's file and rank to the destination square
+        piecesOnBoard.removeIf(piece -> piece.pieceFile == destFile && piece.pieceRank == destRank);
         sourcePiece.pieceFile = destFile;
         sourcePiece.pieceRank = destRank;
         // Update the board state with the modified piece
@@ -272,17 +310,22 @@ if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
         Player opponent = (player == Player.white) ? Player.black : Player.white;
         for (ReturnPiece piece : piecesOnBoard) {
             if (piece.pieceType.name().charAt(0) == (opponent == Player.white ? 'B' : 'W')) {
-                ChessPiece chessPiece = createChessPieceFromReturnPiece(piece);
-                // Construct the move string
-                String move = piece.pieceFile.name() + piece.pieceRank + " " + king.pieceFile.name() + king.pieceRank;
                 // Check if the opponent's piece can attack the king's position
-                if (chessPiece.isValidMove(move)) {
-                    return true;
+                ChessPiece chessPiece = createChessPieceFromReturnPiece(piece);
+                for (int rank = 1; rank <= 8; rank++) {
+                    for (ReturnPiece.PieceFile file : ReturnPiece.PieceFile.values()) {
+                        String move = piece.pieceFile.name() + piece.pieceRank + " " + file.name() + rank;
+                        // Check if the move is valid and captures the king
+                        if (chessPiece.isValidMove(move) && move.equals(king.pieceFile.name() + king.pieceRank)) {
+                            return true;
+                        }
+                    }
                 }
             }
         }
         return false;
     }
+    
     
     
     private static boolean isCheckmate(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
@@ -309,9 +352,9 @@ if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
     }
     
     private static ReturnPiece findKing(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
-        String kingSymbol = (player == Player.white) ? "WK" : "BK";
+        PieceType kingSymbol = (player == Player.white) ? ReturnPiece.PieceType.WK : ReturnPiece.PieceType.BK;
         for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.pieceType.name().equals(kingSymbol)) {
+            if (piece.pieceType.equals(kingSymbol)) {
                 return piece;
             }
         }
@@ -357,6 +400,15 @@ if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
         piece.pieceFile = file;
         piece.pieceRank = rank;
         return piece;
+    }
+
+    public static void undoLastMove() {
+        if (!boardHistory.isEmpty()) {
+            // Restore the previous board state
+            returnPlay.piecesOnBoard = boardHistory.pop();
+            // Switch the turn back to the player who made the undone move
+            switchTurn();
+        }
     }
 
 }

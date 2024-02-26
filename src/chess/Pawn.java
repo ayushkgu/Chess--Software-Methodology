@@ -40,17 +40,11 @@ public class Pawn extends ChessPiece {
                 sourceRank,
                 pieces);
 
-        System.out.println(sourcePiece.hasMoved);
-        if (sourcePiece.hasMoved) {
-            if (pieceType == ReturnPiece.PieceType.WP && pieceFile.name().charAt(0) == destFile
-                    && pieceRank + 2 == destRank) {
-                return false;
-            }
-            if (pieceType == ReturnPiece.PieceType.BP &&
-                    pieceFile.name().charAt(0) == destFile && pieceRank - 2 == destRank && (destPiece == null)) {
-                return false;
-            }
+        // System.out.println(sourcePiece.hasMoved);
+        if (sourcePiece == null || sourcePiece.pieceType != pieceType) {
+            return false;
         }
+
         // Check if the destination square is one square forward for white pawns
         if (pieceType == ReturnPiece.PieceType.WP &&
                 pieceFile.name().charAt(0) == destFile && pieceRank + 1 == destRank && (destPiece == null)) {
@@ -58,10 +52,11 @@ public class Pawn extends ChessPiece {
             return true;
         }
 
+        // Check if the destination square is two squares forward for white pawns (only
+        // valid if pawn hasn't moved yet)
         if (pieceType == ReturnPiece.PieceType.WP && hasMoved == false &&
                 pieceFile.name().charAt(0) == destFile && pieceRank + 2 == destRank && (destPiece == null)) {
             sourcePiece.hasMoved = true; // Set hasMoved to true after moving two squares forward
-            setMoved(true);
 
             return true;
         }
@@ -81,17 +76,15 @@ public class Pawn extends ChessPiece {
         if (pieceType == ReturnPiece.PieceType.BP &&
                 pieceFile.name().charAt(0) == destFile && pieceRank - 1 == destRank && (destPiece == null)) {
             sourcePiece.hasMoved = true;
-            setMoved(true);
 
             return true;
         }
 
         // Check if the destination square is two squares forward for black pawns (only
         // valid if pawn hasn't moved yet)
-        if (pieceType == ReturnPiece.PieceType.BP &&
+        if (pieceType == ReturnPiece.PieceType.BP && hasMoved == false &&
                 pieceFile.name().charAt(0) == destFile && pieceRank - 2 == destRank && (destPiece == null)) {
             sourcePiece.hasMoved = true;
-            setMoved(true);
             return true;
         }
 
@@ -104,16 +97,45 @@ public class Pawn extends ChessPiece {
             sourcePiece.hasMoved = true;
             return true;
         }
+        if (isEnPassant(move)) {
+   
+            pieces.remove(getPieceAtSquare(ReturnPiece.PieceFile.valueOf(String.valueOf(move.charAt(3))),
+            Character.getNumericValue(move.charAt(1)),
+                    pieces));
+            return true;
+        }
+        return false;
+
+    }
+
+    private boolean isEnPassant(String move) {
+        char sourceFile = move.charAt(0);
+        int sourceRank = Character.getNumericValue(move.charAt(1));
+        char destFile = move.charAt(3);
+        int destRank = Character.getNumericValue(move.charAt(4));
+
+        if (Math.abs(sourceFile - destFile) == 1) {
+            if (getPieceAtSquare(ReturnPiece.PieceFile.valueOf(String.valueOf(destFile)), destRank,
+                    pieces) == null) {
+
+                if (getPieceAtSquare(ReturnPiece.PieceFile.valueOf(String.valueOf(destFile)),
+                        sourceRank,
+                        pieces) != null
+                        && getPieceAtSquare(ReturnPiece.PieceFile.valueOf(String.valueOf(destFile)),
+                                sourceRank,
+                                pieces).pieceType != pieceType) {
+                    String lastMove = Chess.movesHistory.get(Chess.movesHistory.size() - 1);
+                    if (lastMove != null) {
+                        if (lastMove.charAt(3) == destFile && Math.abs(Character.getNumericValue(lastMove.charAt(4))
+                                - Character.getNumericValue(lastMove.charAt(1))) == 2) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
 
         return false;
     }
 
-    // Getter and setter for hasMoved field
-    public boolean hasMoved() {
-        return this.hasMoved;
-    }
-
-    public void setMoved(boolean a) {
-        this.hasMoved = true;
-    }
 }
