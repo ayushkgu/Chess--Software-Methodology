@@ -62,10 +62,7 @@ public class Chess {
 
         // Check if the move is a resignation
         if (move.trim().equalsIgnoreCase("resign")) {
-            // Determine the winner based on the current player
             ReturnPlay.Message resignMessage = (currentPlayer == Player.white) ? ReturnPlay.Message.RESIGN_BLACK_WINS : ReturnPlay.Message.RESIGN_WHITE_WINS;
-            
-            // Return a resignation message
             returnPlay.message = resignMessage;
             return returnPlay;
         }
@@ -104,7 +101,6 @@ public class Chess {
 
         // Check if there is a piece at the destination square
         if (destPiece != null) {
-            // Check if the destination square is occupied by a piece of the same color
             if ((sourcePiece.pieceType.name().startsWith("W") && destPiece.pieceType.name().startsWith("W")) ||
                 (sourcePiece.pieceType.name().startsWith("B") && destPiece.pieceType.name().startsWith("B"))) {
                 returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
@@ -126,12 +122,9 @@ public class Chess {
 
         // Check for check
         if (isInCheck(currentPlayer, returnPlay.piecesOnBoard)) {
-            // Set message to CHECK
             returnPlay.message = ReturnPlay.Message.CHECK;
-
             // Check for checkmate
             if (isCheckmate(currentPlayer, returnPlay.piecesOnBoard)) {
-                // Set message to CHECKMATE
                 returnPlay.message = (currentPlayer == Player.white) ? ReturnPlay.Message.CHECKMATE_BLACK_WINS : ReturnPlay.Message.CHECKMATE_WHITE_WINS;
             }
         }
@@ -140,13 +133,14 @@ public class Chess {
         if (isDrawRequested) {
             returnPlay.message = ReturnPlay.Message.DRAW;
         } else {
-            // Switch to the next player's turn
             switchTurn();
         }
     
         // Set the message based on the outcome of the move
         return returnPlay;
     }
+
+    
 
       /**
      * Resets the game state and initializes the board with default pieces.
@@ -319,120 +313,6 @@ public class Chess {
         }
         return null; // This should not happen in a valid game
     }
-    
-    
-
-    private static boolean isPawnPromotion(ReturnPiece sourcePiece, int destRank) {
-        // Check if the source piece is a pawn and it reaches the last rank (8 for white, 1 for black)
-        return (sourcePiece.pieceType.equals(ReturnPiece.PieceType.WP) && destRank == 8) ||
-               (sourcePiece.pieceType.equals(ReturnPiece.PieceType.BP) && destRank == 1);
-    }
-
-    private static void performPawnPromotion(ReturnPiece sourcePiece, ReturnPiece.PieceType promotedPieceType, ArrayList<ReturnPiece> piecesOnBoard) {
-        // Find the promoted pawn in the piecesOnBoard list
-        for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.equals(sourcePiece)) {
-                // Update the piece's type to the chosen promoted piece type
-                piece.pieceType = promotedPieceType;
-                // Exit the loop once the promoted pawn is found and updated
-                break;
-            }
-        }
-    }
-    
-
-    private static boolean isCheckmate(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece.PieceType kingPieceType) {
-        // Get the king piece of the current player
-        ReturnPiece kingPiece = getKingPiece(piecesOnBoard, kingPieceType);
-    
-        // Check if the king is in check
-        if (!isKingInCheck(piecesOnBoard, kingPieceType)) {
-            // The king is not in check, so it's not checkmate
-            return false;
-        }
-    
-        // Check if the king has any legal moves to escape check
-        ReturnPiece.PieceFile kingFile = kingPiece.pieceFile;
-        int kingRank = kingPiece.pieceRank;
-    
-        // Iterate through each possible destination square around the king
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if (dx == 0 && dy == 0) {
-                    continue; // Skip the current square (king's position)
-                }
-                ReturnPiece.PieceFile destFile = ReturnPiece.PieceFile.values()[(kingFile.ordinal() + dx + 8) % 8];
-                int destRank = kingRank + dy;
-    
-                // Check if the move is valid and doesn't put the king in check
-                if (isValidMove(kingFile, kingRank, destFile, destRank, piecesOnBoard)
-                        && !isKingInCheckAfterMove(piecesOnBoard, kingPiece, destFile, destRank)) {
-                    // There is at least one legal move for the king, so it's not checkmate
-                    return false;
-                }
-            }
-        }
-    
-        // If no legal moves are found for the king, it's checkmate
-        return true;
-    }
-    
-    private static boolean isStalemate(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece.PieceType kingPieceType) {
-        // Check if the current player's king is in check
-        if (isKingInCheck(piecesOnBoard, kingPieceType)) {
-            return false; // If the king is in check, it's not stalemate
-        }
-    
-        // Iterate through each piece of the current player
-        for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.pieceType != kingPieceType) {
-                // Check if the piece has any legal moves
-                ReturnPiece.PieceFile pieceFile = piece.pieceFile;
-                int pieceRank = piece.pieceRank;
-    
-                for (ReturnPiece.PieceFile destFile : ReturnPiece.PieceFile.values()) {
-                    for (int destRank = 1; destRank <= 8; destRank++) {
-                        if (isValidMove(pieceFile, pieceRank, destFile, destRank, piecesOnBoard)) {
-                            // There's at least one legal move for a non-king piece, so it's not stalemate
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-    
-        // If no legal moves are found for any piece (excluding the king), it's stalemate
-        return true;
-    }    
-
-    private static ReturnPiece getKingPiece(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece.PieceType kingPieceType) {
-        // Iterate through the pieces on the board to find the king piece of the specified type
-        for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.pieceType.equals(kingPieceType)) {
-                return piece;
-            }
-        }
-        // If no king piece of the specified type is found, return null
-        return null;
-    }
-
-    private static boolean isKingInCheckAfterMove(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece kingPiece, ReturnPiece.PieceFile destFile, int destRank) {
-        // Simulate the move by updating the king's position
-        ReturnPiece.PieceFile originalFile = kingPiece.pieceFile;
-        int originalRank = kingPiece.pieceRank;
-        kingPiece.pieceFile = destFile;
-        kingPiece.pieceRank = destRank;
-    
-        // Check if the king is now in check
-        boolean kingInCheck = isKingInCheck(piecesOnBoard, kingPiece.pieceType);
-    
-        // Restore the king's original position
-        kingPiece.pieceFile = originalFile;
-        kingPiece.pieceRank = originalRank;
-    
-        return kingInCheck;
-    }
-    
 
     private static ArrayList<ReturnPiece> initializeBoard() {
         ArrayList<ReturnPiece> piecesOnBoard = new ArrayList<>();
@@ -473,267 +353,6 @@ public class Chess {
         piece.pieceFile = file;
         piece.pieceRank = rank;
         return piece;
-    }
-
-    private static boolean isCastlingMove(String sourceSquare, String destSquare) {
-        // Check if the move represents a castling move
-        return sourceSquare.equalsIgnoreCase("e1") && destSquare.equalsIgnoreCase("g1") ||
-               sourceSquare.equalsIgnoreCase("e8") && destSquare.equalsIgnoreCase("g8") ||
-               sourceSquare.equalsIgnoreCase("e1") && destSquare.equalsIgnoreCase("c1") ||
-               sourceSquare.equalsIgnoreCase("e8") && destSquare.equalsIgnoreCase("c8");
-    }
-    
-    private static boolean canCastle(ArrayList<ReturnPiece> piecesOnBoard, String sourceSquare, String destSquare) {
-        // Get the king piece involved in castling
-        ReturnPiece kingPiece = getPieceAtSquare(ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1)),
-                                                  Integer.parseInt(sourceSquare.substring(1)), piecesOnBoard);
-        // Get the rook piece involved in castling
-        ReturnPiece rookPiece = getPieceAtSquare(ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1)),
-                                                  Integer.parseInt(destSquare.substring(1)), piecesOnBoard);
-    
-        // Verify if the king and rook pieces exist and are of the correct types
-        if (kingPiece == null || rookPiece == null ||
-                kingPiece.pieceType != ReturnPiece.PieceType.WK && kingPiece.pieceType != ReturnPiece.PieceType.BK ||
-                rookPiece.pieceType != ReturnPiece.PieceType.WR && rookPiece.pieceType != ReturnPiece.PieceType.BR) {
-            return false;
-        }
-    
-        // Check if the king and rook have not moved yet
-        if (kingPiece.pieceType == ReturnPiece.PieceType.WK && rookPiece.pieceType == ReturnPiece.PieceType.WR) {
-            if (!isKingSideCastlingAllowed(piecesOnBoard, kingPiece)) {
-                return false;
-            }
-        } else if (kingPiece.pieceType == ReturnPiece.PieceType.BK && rookPiece.pieceType == ReturnPiece.PieceType.BR) {
-            if (!isKingSideCastlingAllowed(piecesOnBoard, kingPiece)) {
-                return false;
-            }
-        } else {
-            if (!isQueenSideCastlingAllowed(piecesOnBoard, kingPiece)) {
-                return false;
-            }
-        }
-    
-        // Check if there are no pieces between the king and the rook
-        ReturnPiece.PieceFile kingFile = kingPiece.pieceFile;
-        ReturnPiece.PieceFile rookFile = rookPiece.pieceFile;
-        int kingRank = kingPiece.pieceRank;
-        int rookRank = rookPiece.pieceRank;
-    
-        if (kingFile.ordinal() < rookFile.ordinal()) {
-            // King side castling
-            for (int fileIndex = kingFile.ordinal() + 1; fileIndex < rookFile.ordinal(); fileIndex++) {
-                if (getPieceAtSquare(ReturnPiece.PieceFile.values()[fileIndex], kingRank, piecesOnBoard) != null) {
-                    return false;
-                }
-            }
-        } else {
-            // Queen side castling
-            for (int fileIndex = rookFile.ordinal() + 1; fileIndex < kingFile.ordinal(); fileIndex++) {
-                if (getPieceAtSquare(ReturnPiece.PieceFile.values()[fileIndex], kingRank, piecesOnBoard) != null) {
-                    return false;
-                }
-            }
-        }
-    
-        // Verify if the king is not in check and does not pass through or end up on a square attacked by an enemy piece
-        if (isKingInCheck(piecesOnBoard, kingPiece.pieceType)) {
-            return false;
-        }
-    
-        return true;
-    }    
-    
-
-    private static void performCastling(ArrayList<ReturnPiece> piecesOnBoard, String sourceSquare, String destSquare) {
-        // Move the king and rook pieces to their new positions
-        ReturnPiece kingPiece = getPieceAtSquare(ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1)),
-                                                  Integer.parseInt(sourceSquare.substring(1)), piecesOnBoard);
-        ReturnPiece rookPiece = getPieceAtSquare(ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1)),
-                                                  Integer.parseInt(destSquare.substring(1)), piecesOnBoard);
-    
-        ReturnPiece.PieceFile kingFile = kingPiece.pieceFile;
-        int kingRank = kingPiece.pieceRank;
-    
-        if (kingFile.ordinal() < ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1)).ordinal()) {
-            // King side castling
-            kingPiece.pieceFile = ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1));
-            rookPiece.pieceFile = previousFile(ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1)));
-        } else {
-            // Queen side castling
-            kingPiece.pieceFile = ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1));
-            rookPiece.pieceFile = nextFile(ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1)));
-        }
-    
-        kingPiece.pieceRank = Integer.parseInt(destSquare.substring(1));
-        rookPiece.pieceRank = kingRank;
-    
-        // Update the board state with the modified pieces
-        for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.equals(kingPiece) || piece.equals(rookPiece)) {
-                piece.pieceFile = (piece.equals(kingPiece)) ? kingPiece.pieceFile : rookPiece.pieceFile;
-                piece.pieceRank = (piece.equals(kingPiece)) ? kingPiece.pieceRank : rookPiece.pieceRank;
-            }
-        }
-    }
-    
-
-    private static boolean isKingSideCastlingAllowed(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece kingPiece) {
-        // Get the corresponding rook piece for king side castling
-        ReturnPiece rookPiece = getPieceAtSquare(ReturnPiece.PieceFile.h, kingPiece.pieceRank, piecesOnBoard);
-        
-        // Check if the rook piece exists and has not moved
-        if (rookPiece == null || rookPiece.pieceType != ReturnPiece.PieceType.WR && rookPiece.pieceType != ReturnPiece.PieceType.BR) {
-            return false;
-        }
-    
-        // Check if there are no pieces between the king and the rook
-        for (int fileIndex = kingPiece.pieceFile.ordinal() + 1; fileIndex < rookPiece.pieceFile.ordinal(); fileIndex++) {
-            if (getPieceAtSquare(ReturnPiece.PieceFile.values()[fileIndex], kingPiece.pieceRank, piecesOnBoard) != null) {
-                return false;
-            }
-        }
-    
-        // Check if the squares the king passes through are not attacked by enemy pieces
-        if (isSquareAttacked(piecesOnBoard, ReturnPiece.PieceFile.f, kingPiece.pieceRank, kingPiece)) {
-            return false;
-        }
-        if (isSquareAttacked(piecesOnBoard, ReturnPiece.PieceFile.g, kingPiece.pieceRank, kingPiece)) {
-            return false;
-        }
-    
-        return true;
-    }
-
-    private static boolean isQueenSideCastlingAllowed(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece kingPiece) {
-        // Get the corresponding rook piece for queen side castling
-        ReturnPiece rookPiece = getPieceAtSquare(ReturnPiece.PieceFile.a, kingPiece.pieceRank, piecesOnBoard);
-        
-        // Check if the rook piece exists and has not moved
-        if (rookPiece == null || rookPiece.pieceType != ReturnPiece.PieceType.WR && rookPiece.pieceType != ReturnPiece.PieceType.BR) {
-            return false;
-        }
-    
-        // Check if there are no pieces between the king and the rook
-        for (int fileIndex = rookPiece.pieceFile.ordinal() + 1; fileIndex < kingPiece.pieceFile.ordinal(); fileIndex++) {
-            if (getPieceAtSquare(ReturnPiece.PieceFile.values()[fileIndex], kingPiece.pieceRank, piecesOnBoard) != null) {
-                return false;
-            }
-        }
-    
-        // Check if the squares the king passes through are not attacked by enemy pieces
-        if (isSquareAttacked(piecesOnBoard, ReturnPiece.PieceFile.d, kingPiece.pieceRank, kingPiece)) {
-            return false;
-        }
-        if (isSquareAttacked(piecesOnBoard, ReturnPiece.PieceFile.c, kingPiece.pieceRank, kingPiece)) {
-            return false;
-        }
-        if (isSquareAttacked(piecesOnBoard, ReturnPiece.PieceFile.b, kingPiece.pieceRank, kingPiece)) {
-            return false;
-        }
-    
-        return true;
-    }
-
-    private static boolean isSquareAttacked(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece.PieceFile file, int rank, ReturnPiece kingPiece) {
-        // Iterate through each piece on the board
-        for (ReturnPiece piece : piecesOnBoard) {
-            // Check if the piece belongs to the opponent
-            if (piece.pieceType != kingPiece.pieceType) {
-                // Create a ChessPiece object corresponding to the opponent's piece
-                ChessPiece opponentPiece = createChessPieceFromReturnPiece(piece);
-                // Check if the opponent's piece can attack the specified square
-                if (opponentPiece.isValidMove(piece.pieceFile.name() + piece.pieceRank + " " + file.name() + rank)) {
-                    return true;
-                }
-            }
-        }
-        // If no opponent piece can attack the square, return false
-        return false;
-    }
-
-    private static ReturnPiece.PieceFile previousFile(ReturnPiece.PieceFile file) {
-        switch (file) {
-            case b: return ReturnPiece.PieceFile.a;
-            case c: return ReturnPiece.PieceFile.b;
-            case d: return ReturnPiece.PieceFile.c;
-            case e: return ReturnPiece.PieceFile.d;
-            case f: return ReturnPiece.PieceFile.e;
-            case g: return ReturnPiece.PieceFile.f;
-            case h: return ReturnPiece.PieceFile.g;
-            default: return null; // If file is 'a', there's no previous file
-        }
-    }
-    
-    private static ReturnPiece.PieceFile nextFile(ReturnPiece.PieceFile file) {
-        switch (file) {
-            case a: return ReturnPiece.PieceFile.b;
-            case b: return ReturnPiece.PieceFile.c;
-            case c: return ReturnPiece.PieceFile.d;
-            case d: return ReturnPiece.PieceFile.e;
-            case e: return ReturnPiece.PieceFile.f;
-            case f: return ReturnPiece.PieceFile.g;
-            case g: return ReturnPiece.PieceFile.h;
-            default: return null; // If file is 'h', there's no next file
-        }
-    }
-
-
-      // Method to check if the move is an en passant move
-      private static boolean isEnPassantMove(String sourceSquare, String destSquare) {
-        ReturnPiece.PieceFile sourceFile = ReturnPiece.PieceFile.valueOf(sourceSquare.substring(0, 1));
-        int sourceRank = Integer.parseInt(sourceSquare.substring(1));
-        ReturnPiece.PieceFile destFile = ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1));
-        int destRank = Integer.parseInt(destSquare.substring(1));
-
-        // Check if the move is a diagonal pawn move of length 1, indicating en passant
-        return Math.abs(destFile.ordinal() - sourceFile.ordinal()) == 1 &&
-               Math.abs(destRank - sourceRank) == 1;
-    }
-
-    // Method to check if en passant conditions are met
-    private static boolean canEnPassant(ArrayList<ReturnPiece> piecesOnBoard, String sourceSquare, String destSquare) {
-        // Check if the en passant flag is set and the target square is empty
-        ReturnPiece targetPiece = getPieceAtSquare(ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1)),
-                                                    Integer.parseInt(destSquare.substring(1)), piecesOnBoard);
-        return enPassant && targetPiece == null;
-    }
-
-    // Method to perform en passant
-    private static void performEnPassant(ArrayList<ReturnPiece> piecesOnBoard, String sourceSquare, String destSquare) {
-        // Get the target pawn's square
-        ReturnPiece.PieceFile targetFile = ReturnPiece.PieceFile.valueOf(destSquare.substring(0, 1));
-        int targetRank = Integer.parseInt(sourceSquare.substring(1)); // Target pawn's rank
-        
-        // Find the target pawn's position
-        ReturnPiece targetPawn = getPieceAtSquare(targetFile, targetRank, piecesOnBoard);
-        
-        // Remove the target pawn from the board
-        piecesOnBoard.remove(targetPawn);
-    }
-
-    //Method to handle a draw
-    private static boolean isDraw(ArrayList<ReturnPiece> piecesOnBoard, ReturnPiece.PieceType kingPieceType) {
-        // Check for draw conditions such as stalemate, threefold repetition, etc.
-        if (isStalemate(piecesOnBoard, kingPieceType)) {
-            return true;
-        }
-        return false;
-    }
-
-    // Method to handle a draw request
-    public static ReturnPlay drawRequest() {
-        ReturnPlay returnPlay = new ReturnPlay();
-        returnPlay.piecesOnBoard = initializeBoard();
-        returnPlay.message = ReturnPlay.Message.DRAW;
-        return returnPlay;
-    }
-
-    // Method to handle accepting a draw request
-    public static ReturnPlay acceptDraw() {
-        ReturnPlay returnPlay = new ReturnPlay();
-        returnPlay.piecesOnBoard = initializeBoard();
-        returnPlay.message = ReturnPlay.Message.DRAW;
-        return returnPlay;
     }
 
 }
