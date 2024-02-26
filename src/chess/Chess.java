@@ -252,8 +252,9 @@ public class Chess {
 
         // Check if the move is valid for the piece according to its movement rules
         if (chessPiece != null) {
+                
             return chessPiece.isValidMove(sourceFile.name() + sourceRank + " " + destFile.name() + destRank);
-            }
+        }
     
         return false;
     }
