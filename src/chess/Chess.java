@@ -10,7 +10,8 @@ class ReturnPiece {
 	
 	PieceType pieceType;
 	PieceFile pieceFile;
-	int pieceRank;  // 1..8
+    int pieceRank; // 1..8
+    boolean hasMoved = false; 
 	public String toString() {
 		return ""+pieceFile+pieceRank+":"+pieceType;
 	}
@@ -225,7 +226,7 @@ public class Chess {
     public static void start() {
         // Initialize the game board
         ArrayList<ReturnPiece> piecesOnBoard = initializeBoard();
-
+        PlayChess.printBoard(piecesOnBoard);
         // Create a new ReturnPlay instance
         returnPlay = new ReturnPlay();
         returnPlay.piecesOnBoard = piecesOnBoard;
