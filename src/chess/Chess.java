@@ -59,7 +59,17 @@ public class Chess {
             returnPlay.piecesOnBoard = initializeBoard();
             boardInitialized = true;
         }
-    
+
+        // Check if the move is a resignation
+        if (move.trim().equalsIgnoreCase("resign")) {
+            // Determine the winner based on the current player
+            ReturnPlay.Message resignMessage = (currentPlayer == Player.white) ? ReturnPlay.Message.RESIGN_BLACK_WINS : ReturnPlay.Message.RESIGN_WHITE_WINS;
+            
+            // Return a resignation message
+            returnPlay.message = resignMessage;
+            return returnPlay;
+        }
+
         // Check if it's the correct player's turn
         if ((currentPlayer == Player.white && isBlackPiece(move)) ||
             (currentPlayer == Player.black && isWhitePiece(move))) {
@@ -67,6 +77,7 @@ public class Chess {
             return returnPlay;
         }
     
+
         // Parse the move string to get the source and destination squares
         String[] moveParts = move.trim().split(" ");
         String sourceSquare = moveParts[0];
@@ -88,7 +99,6 @@ public class Chess {
             return returnPlay;
         }
 
-
         // Get the piece at the destination square
         ReturnPiece destPiece = getPieceAtSquare(destFile, destRank, returnPlay.piecesOnBoard);
 
@@ -101,36 +111,6 @@ public class Chess {
                 return returnPlay;
             }
         }
-
-    
-        /*
-        // Check for en passant move
-        if (isEnPassantMove(sourceSquare, destSquare)) {
-            if (canEnPassant(returnPlay.piecesOnBoard, sourceSquare, destSquare)) {
-                performEnPassant(returnPlay.piecesOnBoard, sourceSquare, destSquare);
-                enPassant = false;
-                switchTurn(); // Switch to the next player's turn
-                return returnPlay;
-            } else {
-                returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-                return returnPlay;
-            }
-        } else {
-            enPassant = false;
-        }
-    
-        // Check for castling move
-        if (isCastlingMove(sourceSquare, destSquare)) {
-            if (canCastle(returnPlay.piecesOnBoard, sourceSquare, destSquare)) {
-                performCastling(returnPlay.piecesOnBoard, sourceSquare, destSquare);
-                switchTurn(); // Switch to the next player's turn
-                return returnPlay;
-            } else {
-                returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-                return returnPlay;
-            }
-        }
-        */
     
         // Create a ChessPiece object corresponding to the source piece
         ChessPiece chessPiece = createChessPieceFromReturnPiece(sourcePiece);
@@ -141,59 +121,48 @@ public class Chess {
             return returnPlay;
         }
     
-        //  THIS SEEMS TO ALWAYS GIVE ILLEGAL_MOVE
-        // // Check if the move puts the player's own king in check
-        // ArrayList<ReturnPiece> updatedBoard = new ArrayList<>(returnPlay.piecesOnBoard);
-        // applyMoveToBoard(sourcePiece, destFile, destRank, updatedBoard);
-    
-        // if (isKingInCheck(updatedBoard, sourcePiece.pieceType)) {
-        //     returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-        //     return returnPlay;
-        // }
-    
         // Update the board state
         applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
-    
-        /*
-        // Check for special moves (e.g., en passant, castling, pawn promotion)
-        if (isPawnPromotion(sourcePiece, destRank)) {
-            // Perform pawn promotion
-            performPawnPromotion(sourcePiece, ReturnPiece.PieceType.valueOf("WQ"), returnPlay.piecesOnBoard);
-        }
-    
-        // If the move is valid and doesn't result in checkmate, check for draw
-        if (!isDrawRequested && !isCheckmate(returnPlay.piecesOnBoard, sourcePiece.pieceType)) {
-            // Check for draw if not already requested and not in checkmate
-            if (isDraw(returnPlay.piecesOnBoard, sourcePiece.pieceType)) {
-                returnPlay.message = ReturnPlay.Message.DRAW;
-                return returnPlay;
+
+        // Check for check
+        if (isInCheck(currentPlayer, returnPlay.piecesOnBoard)) {
+            // Set message to CHECK
+            returnPlay.message = ReturnPlay.Message.CHECK;
+
+            // Check for checkmate
+            if (isCheckmate(currentPlayer, returnPlay.piecesOnBoard)) {
+                // Set message to CHECKMATE
+                returnPlay.message = (currentPlayer == Player.white) ? ReturnPlay.Message.CHECKMATE_BLACK_WINS : ReturnPlay.Message.CHECKMATE_WHITE_WINS;
             }
         }
-    
-        // If the move includes a draw request, handle it
+
+        // Check for draw request after the move is executed
         if (isDrawRequested) {
             returnPlay.message = ReturnPlay.Message.DRAW;
-            return returnPlay;
+        } else {
+            // Switch to the next player's turn
+            switchTurn();
         }
-    
-        // Check for check, checkmate, or stalemate
-        if (isCheckmate(returnPlay.piecesOnBoard, sourcePiece.pieceType)) {
-            returnPlay.message = (sourcePiece.pieceType.equals(ReturnPiece.PieceType.WK)) ?
-                    ReturnPlay.Message.CHECKMATE_WHITE_WINS : ReturnPlay.Message.CHECKMATE_BLACK_WINS;
-        } else if (isStalemate(returnPlay.piecesOnBoard, sourcePiece.pieceType)) {
-            returnPlay.message = ReturnPlay.Message.STALEMATE;
-        } else if (isKingInCheck(returnPlay.piecesOnBoard, sourcePiece.pieceType)) {
-            returnPlay.message = ReturnPlay.Message.CHECK;
-        }
-        */
-
-
-        // Switch to the next player's turn
-        switchTurn();
     
         // Set the message based on the outcome of the move
         return returnPlay;
     }
+
+      /**
+     * Resets the game state and initializes the board with default pieces.
+     */
+    public static void start() {
+        // Initialize the game board
+        ArrayList<ReturnPiece> piecesOnBoard = initializeBoard();
+        PlayChess.printBoard(piecesOnBoard);
+        // Create a new ReturnPlay instance
+        returnPlay = new ReturnPlay();
+        returnPlay.piecesOnBoard = piecesOnBoard;
+
+        // Reset current player to white at the start of the game
+        currentPlayer = Player.white;
+    }
+
 
     //Method to switch the turn to the next player
     private static void switchTurn() {
@@ -215,28 +184,6 @@ public class Chess {
         ReturnPiece piece = getPieceAtSquare(sourceFile, Integer.parseInt(sourceSquare.substring(1)), returnPlay.piecesOnBoard);
         return piece != null && piece.pieceType.name().startsWith("B");
     }
-
-
-
-
-
-    /**
-     * Resets the game state and initializes the board with default pieces.
-     */
-    public static void start() {
-        // Initialize the game board
-        ArrayList<ReturnPiece> piecesOnBoard = initializeBoard();
-        PlayChess.printBoard(piecesOnBoard);
-        // Create a new ReturnPlay instance
-        returnPlay = new ReturnPlay();
-        returnPlay.piecesOnBoard = piecesOnBoard;
-
-        // Reset current player to white at the start of the game
-        currentPlayer = Player.white;
-    }
-
-
-
 
 
     private static boolean isValidMove(ReturnPiece.PieceFile sourceFile, int sourceRank, ReturnPiece.PieceFile destFile, int destRank, ArrayList<ReturnPiece> piecesOnBoard) {
@@ -323,34 +270,56 @@ public class Chess {
         }
     }
     
-    private static boolean isKingInCheck(ArrayList<ReturnPiece> board, ReturnPiece.PieceType kingType) {
-        // Find the king of the specified type on the board
-        ReturnPiece king = null;
-        for (ReturnPiece piece : board) {
-            if (piece.pieceType.equals(kingType)) {
-                king = piece;
-                break;
-            }
-        }
-        
-        // If king is not found, return false
-        if (king == null) {
-            return false;
-        }
-        
-        // Check if any opponent piece can attack the king
-        for (ReturnPiece piece : board) {
-            if (piece.pieceType != kingType) {
-                ChessPiece opponentPiece = createChessPieceFromReturnPiece(piece);
-                if (opponentPiece != null && opponentPiece.isValidMove(piece.pieceFile.name() + piece.pieceRank + " " + king.pieceFile.name() + king.pieceRank)) {
+    private static boolean isInCheck(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
+        // Find the king of the specified player
+        ReturnPiece king = findKing(player, piecesOnBoard);
+    
+        // Check if any opponent's piece can attack the king
+        Player opponent = (player == Player.white) ? Player.black : Player.white;
+        for (ReturnPiece piece : piecesOnBoard) {
+            if (piece.pieceType.name().charAt(0) == (opponent == Player.white ? 'B' : 'W')) {
+                ChessPiece chessPiece = createChessPieceFromReturnPiece(piece);
+                if (chessPiece.isValidMove(piece.pieceFile.name() + piece.pieceRank + " " + king.pieceFile.name() + king.pieceRank)) {
                     return true;
                 }
             }
         }
-        
-        // If no opponent piece can attack the king, return false
         return false;
     }
+    
+    private static boolean isCheckmate(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
+        // Check if the player is in check
+        if (!isInCheck(player, piecesOnBoard)) {
+            return false;
+        }
+    
+        // Iterate through all the player's pieces to find a legal move to get out of check
+        for (ReturnPiece piece : piecesOnBoard) {
+            if (piece.pieceType.name().charAt(0) == (player == Player.white ? 'W' : 'B')) {
+                for (int rank = 1; rank <= 8; rank++) {
+                    for (ReturnPiece.PieceFile file : ReturnPiece.PieceFile.values()) {
+                        if (isValidMove(piece.pieceFile, piece.pieceRank, file, rank, piecesOnBoard)) {
+                            // If a legal move is found, the player is not in checkmate
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        // If no legal move is found, it's checkmate
+        return true;
+    }
+    
+    private static ReturnPiece findKing(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
+        String kingSymbol = (player == Player.white) ? "WK" : "BK";
+        for (ReturnPiece piece : piecesOnBoard) {
+            if (piece.pieceType.name().equals(String.valueOf(kingSymbol))) {
+                return piece;
+            }
+        }
+        return null; // This should not happen in a valid game
+    }
+    
     
 
     private static boolean isPawnPromotion(ReturnPiece sourcePiece, int destRank) {
@@ -740,13 +709,6 @@ public class Chess {
         
         // Remove the target pawn from the board
         piecesOnBoard.remove(targetPawn);
-    }
-
-    //Method to handle a player's resignation
-    public static ReturnPlay resign(Player player) {
-        ReturnPlay returnPlay = new ReturnPlay();
-        returnPlay.message = (player == Player.white) ? ReturnPlay.Message.RESIGN_BLACK_WINS : ReturnPlay.Message.RESIGN_WHITE_WINS;
-        return returnPlay;
     }
 
     //Method to handle a draw
