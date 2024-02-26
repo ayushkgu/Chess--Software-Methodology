@@ -112,10 +112,10 @@ public class Chess {
         ChessPiece chessPiece = createChessPieceFromReturnPiece(sourcePiece);
     
         // Check if the move is valid for the piece according to its movement rules 
-        if (!chessPiece.isValidMove(sourceFile.name() + sourceRank + " " + destFile.name() + destRank)) {
-            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
-            return returnPlay;
-        }
+if (!chessPiece.isValidMove(sourceSquare + " " + destSquare)) {
+    returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+    return returnPlay;
+}
     
         // Update the board state
         applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
@@ -268,18 +268,22 @@ public class Chess {
         // Find the king of the specified player
         ReturnPiece king = findKing(player, piecesOnBoard);
     
-        // Check if any opponent's piece can attack the king
+        // Check if any opponent's piece can attack the king's position
         Player opponent = (player == Player.white) ? Player.black : Player.white;
         for (ReturnPiece piece : piecesOnBoard) {
             if (piece.pieceType.name().charAt(0) == (opponent == Player.white ? 'B' : 'W')) {
                 ChessPiece chessPiece = createChessPieceFromReturnPiece(piece);
-                if (chessPiece.isValidMove(piece.pieceFile.name() + piece.pieceRank + " " + king.pieceFile.name() + king.pieceRank)) {
+                // Construct the move string
+                String move = piece.pieceFile.name() + piece.pieceRank + " " + king.pieceFile.name() + king.pieceRank;
+                // Check if the opponent's piece can attack the king's position
+                if (chessPiece.isValidMove(move)) {
                     return true;
                 }
             }
         }
         return false;
     }
+    
     
     private static boolean isCheckmate(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
         // Check if the player is in check
