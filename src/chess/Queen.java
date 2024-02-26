@@ -55,12 +55,12 @@ public class Queen extends ChessPiece {
                     return false;
             }
         } else {
-            if (fileDirection.ordinal() > sourceFile.ordinal()) {
+            int fileDirection;
+            if (destFile.ordinal() > sourceFile.ordinal()) {
                 fileDirection = 1;
             } else {
                 fileDirection = -1;
-            }
-            ;
+            };
             int rankDirection = destRank > sourceRank ? 1 : -1;
             int distance = Math.abs(destFile.ordinal() - sourceFile.ordinal());
             for (int i = 1; i < distance; i++) {
