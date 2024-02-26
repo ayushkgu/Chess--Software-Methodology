@@ -313,7 +313,7 @@ public class Chess {
     private static ReturnPiece findKing(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
         String kingSymbol = (player == Player.white) ? "WK" : "BK";
         for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.pieceType.name().equals(String.valueOf(kingSymbol))) {
+            if (piece.pieceType.name().equals(kingSymbol)) {
                 return piece;
             }
         }
