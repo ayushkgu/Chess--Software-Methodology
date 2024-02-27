@@ -114,6 +114,8 @@ public class Chess {
             }
         }
     
+
+        
         // Create a ChessPiece object corresponding to the source piece
         ChessPiece chessPiece = createChessPieceFromReturnPiece(sourcePiece);
     
@@ -123,6 +125,14 @@ public class Chess {
             return returnPlay;
         }
     
+        if (isInCheck(currentPlayer, returnPlay.piecesOnBoard)) {
+            // Revert the move
+            returnPlay.piecesOnBoard = boardHistory.pop();
+            returnPlay.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            return returnPlay;
+        }
+    
+        
         // Update the board state
         if (chessPiece instanceof King && Math.abs(sourceFile.ordinal() - destFile.ordinal()) == 2
         && chessPiece.isValidMove(move)) {
@@ -137,6 +147,8 @@ public class Chess {
         }
         applyMoveToBoard(king, ReturnPiece.PieceFile.g, destRank, returnPlay.piecesOnBoard); // Move king
         applyMoveToBoard(rook, ReturnPiece.PieceFile.f, destRank, returnPlay.piecesOnBoard); // Move rook
+        boardHistory.push(new ArrayList<>(returnPlay.piecesOnBoard));
+        
     } else {
         // Castling to the left
         rook = getPieceAtSquare(ReturnPiece.PieceFile.a, destRank, returnPlay.piecesOnBoard);
@@ -146,6 +158,7 @@ public class Chess {
         }
         applyMoveToBoard(king, ReturnPiece.PieceFile.c, destRank, returnPlay.piecesOnBoard); // Move king
         applyMoveToBoard(rook, ReturnPiece.PieceFile.d, destRank, returnPlay.piecesOnBoard); // Move rook
+        boardHistory.push(new ArrayList<>(returnPlay.piecesOnBoard));
     }
 } else if (chessPiece instanceof Pawn && ((chessPiece.pieceType == ReturnPiece.PieceType.WP && destRank == 8) ||
         (chessPiece.pieceType == ReturnPiece.PieceType.BP && destRank == 1))) {
@@ -186,10 +199,14 @@ public class Chess {
     
     sourcePiece.pieceType = promotedPieceType;
     applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
+    boardHistory.push(new ArrayList<>(returnPlay.piecesOnBoard));
+
 }
 
 else {
     applyMoveToBoard(sourcePiece, destFile, destRank, returnPlay.piecesOnBoard);
+    boardHistory.push(new ArrayList<>(returnPlay.piecesOnBoard));
+
 }
         movesHistory.add(move);
 
@@ -197,9 +214,7 @@ else {
        
 
         // Check for checkmate
-        if (isCheckmate(currentPlayer, returnPlay.piecesOnBoard)) {
-            returnPlay.message = (currentPlayer == Player.white) ? ReturnPlay.Message.CHECKMATE_BLACK_WINS : ReturnPlay.Message.CHECKMATE_WHITE_WINS;
-        }
+   
     
         // Check for draw request after the move is executed
         if (isDrawRequested) {
@@ -213,7 +228,6 @@ else {
             if (isInCheck(Player.white, returnPlay.piecesOnBoard)) {
                 // If the move puts the current player in check, revert the move
                 returnPlay.message = ReturnPlay.Message.CHECK;
-                boardHistory.push(returnPlay.piecesOnBoard);
                 return returnPlay;
             }
          } else {
@@ -221,7 +235,7 @@ else {
             if (isInCheck(Player.black, returnPlay.piecesOnBoard)) {
                 // If the move puts the current player in check, revert the move
                 returnPlay.message = ReturnPlay.Message.CHECK;
-                boardHistory.push(returnPlay.piecesOnBoard);
+
                 return returnPlay;
             }
          }
@@ -377,33 +391,11 @@ else {
     }
     
     
-
     private static boolean isCheckmate(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
-        // Check if the player is in check
-        if (!isInCheck(player, piecesOnBoard)) {
-            return false; // Not in checkmate if not in check
-        }
-    
-        // Iterate through all the player's pieces to find a legal move to get out of check
-        for (ReturnPiece piece : piecesOnBoard) {
-            if (piece.pieceType.name().charAt(0) == (player == Player.white ? 'W' : 'B')) {
-                for (int rank = 1; rank <= 8; rank++) {
-                    for (ReturnPiece.PieceFile file : ReturnPiece.PieceFile.values()) {
-                        if (isValidMove(piece.pieceFile, piece.pieceRank, file, rank, piecesOnBoard)) {
-                            // If a legal move is found, the player is not in checkmate
-                            ArrayList<ReturnPiece> tempBoard = new ArrayList<>(piecesOnBoard);
-                            applyMoveToBoard(piece, file, rank, tempBoard);
-                            if (!isInCheck(player, tempBoard)) {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
         // If no legal move is found, it's checkmate
-        return true;
+        return false;
     }
+    
     
 
     private static ReturnPiece findKing(Player player, ArrayList<ReturnPiece> piecesOnBoard) {
